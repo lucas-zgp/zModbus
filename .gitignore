@@ -82,4 +82,8 @@ Examples/
 !*.bin
 !*.hex
 Template/USER/JLinkLog.txt
-
+/Template/OBJ
+/Template/USER/DebugConfig
+/Template/USER/JLinkLog.txt
+/Template/USER/JLinkSettings.ini
+/Template/USER/EventRecorderStub.scvd
