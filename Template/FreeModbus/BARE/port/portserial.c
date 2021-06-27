@@ -39,20 +39,22 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
      */
 		if(xRxEnable == TRUE)
 		{
-			USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+			USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+			GPIO_WriteBit(GPIOG,GPIO_Pin_8,Bit_RESET);
 		}
 		else
 		{
-			USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
+			USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+			GPIO_WriteBit(GPIOG,GPIO_Pin_8,Bit_SET);
 		}
 		
 		if(xTxEnable == TRUE)
 		{
-			USART_ITConfig(USART1, USART_IT_TC, ENABLE);
+			USART_ITConfig(USART2, USART_IT_TC, ENABLE);
 		}
 		else
 		{
-			USART_ITConfig(USART1, USART_IT_TC, DISABLE);
+			USART_ITConfig(USART2, USART_IT_TC, DISABLE);
 		}
 }
 
@@ -70,7 +72,7 @@ xMBPortSerialPutByte( CHAR ucByte )
     /* Put a byte in the UARTs transmit buffer. This function is called
      * by the protocol stack if pxMBFrameCBTransmitterEmpty( ) has been
      * called. */
-		USART_SendData(USART1, ucByte);
+		USART_SendData(USART2, ucByte);
     return TRUE;
 }
 
@@ -80,7 +82,7 @@ xMBPortSerialGetByte( CHAR * pucByte )
     /* Return the byte in the UARTs receive buffer. This function is called
      * by the protocol stack after pxMBFrameCBByteReceived( ) has been called.
      */
-		*pucByte = USART_ReceiveData(USART1); 
+		*pucByte = USART_ReceiveData(USART2); 
     return TRUE;
 }
 
@@ -109,32 +111,32 @@ static void prvvUARTRxISR( void )
 
 
 /**
-  * @brief  This function handles usart1 Handler.
+  * @brief  This function handles USART2 Handler.
   * @param  None
   * @retval None
   */
-void USART1_IRQHandler(void)
+void USART2_IRQHandler(void)
 {
   //发生接收中断
-  if(USART_GetITStatus(USART1, USART_IT_RXNE) == SET)
+  if(USART_GetITStatus(USART2, USART_IT_RXNE) == SET)
   {
     prvvUARTRxISR(); 
     //清除中断标志位    
-    USART_ClearITPendingBit(USART1, USART_IT_RXNE);   
+    USART_ClearITPendingBit(USART2, USART_IT_RXNE);   
   }
 	
-	if(USART_GetITStatus(USART1, USART_IT_ORE) == SET)
+	if(USART_GetITStatus(USART2, USART_IT_ORE) == SET)
   {  
-    USART_ClearITPendingBit(USART1, USART_IT_ORE);
+    USART_ClearITPendingBit(USART2, USART_IT_ORE);
 		prvvUARTRxISR(); 	
   }
   
   //发生完成中断
-  if(USART_GetITStatus(USART1, USART_IT_TC) == SET)
+  if(USART_GetITStatus(USART2, USART_IT_TC) == SET)
   {
     prvvUARTTxReadyISR();
     //清除中断标志
-    USART_ClearITPendingBit(USART1, USART_IT_TC);
+    USART_ClearITPendingBit(USART2, USART_IT_TC);
   }
 }
 

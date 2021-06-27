@@ -81,3 +81,5 @@ Examples/
 !*.axf
 !*.bin
 !*.hex
+Template/USER/JLinkLog.txt
+

@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
 //ALIENTEK STM32F4探索者开发板
-//串口1初始化		   
+//串口2初始化		   
 //正点原子@ALIENTEK
 //技术论坛:www.openedv.com
 //修改日期:2014/6/10
@@ -57,7 +57,7 @@ int fputc(int ch, FILE *f)
 }
 #endif
  
-//串口1中断服务程序
+//串口2中断服务程序
 //注意,读取USARTx->SR能避免莫名其妙的错误   	
 u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
 //接收状态
@@ -66,7 +66,7 @@ u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
 //bit13~0，	接收到的有效字节数目
 u16 USART_RX_STA=0;       //接收状态标记	
 
-//初始化IO 串口1 
+//初始化IO 串口2 
 //bound:波特率
 void uart_init(u32 bound)
 {
@@ -75,14 +75,24 @@ void uart_init(u32 bound)
 	USART_InitTypeDef USART_InitStructure;
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA,ENABLE); //使能GPIOA时钟
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);//使能USART1时钟
- 
-	//串口1对应引脚复用映射
-	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1); //GPIOA9复用为USART1
-	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1); //GPIOA10复用为USART1
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);//使能USART2时钟
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOG,ENABLE);
+	
+	//rs485 控制引脚 高发 低收
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8; //GPIOG8
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;	//速度100MHz
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; //推挽输出
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; //上拉
+	GPIO_Init(GPIOG,&GPIO_InitStructure); //初始化PG8
+	GPIO_WriteBit(GPIOG,GPIO_Pin_8,Bit_RESET);
+	
+	//串口2对应引脚复用映射
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource2,GPIO_AF_USART2); //GPIOA9复用为USART1
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource3,GPIO_AF_USART2); //GPIOA10复用为USART1
 	
 	//USART1端口配置
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10; //GPIOA9与GPIOA10
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3; //GPIOA9与GPIOA10
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;//复用功能
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//速度50MHz
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; //推挽复用输出
@@ -96,9 +106,9 @@ void uart_init(u32 bound)
 	USART_InitStructure.USART_Parity = USART_Parity_No;//无奇偶校验位
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//无硬件数据流控制
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;	//收发模式
-  USART_Init(USART1, &USART_InitStructure); //初始化串口1
+  USART_Init(USART2, &USART_InitStructure); //初始化串口2
 	
-  USART_Cmd(USART1, ENABLE);  //使能串口1 
+  USART_Cmd(USART2, ENABLE);  //使能串口2 
 	
 	//USART_ClearFlag(USART1, USART_FLAG_TC);
 	
@@ -106,7 +116,7 @@ void uart_init(u32 bound)
 //	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//开启相关中断
 
 //	//Usart1 NVIC 配置
-//  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//串口1中断通道
+//  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//串口2中断通道
 //	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3;//抢占优先级3
 //	NVIC_InitStructure.NVIC_IRQChannelSubPriority =3;		//子优先级3
 //	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
@@ -130,7 +140,7 @@ void USART_NVIC(void)
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
   
   /* 配置中断源 */
-  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
